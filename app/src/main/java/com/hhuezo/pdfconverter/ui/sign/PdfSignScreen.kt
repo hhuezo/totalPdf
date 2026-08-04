@@ -7,6 +7,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -41,6 +45,7 @@ import androidx.compose.material.icons.outlined.Draw
 import androidx.compose.material.icons.outlined.Event
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Title
+import androidx.compose.material.icons.outlined.ZoomInMap
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -62,17 +67,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -102,6 +112,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
+
+private const val MinZoom = 1f
+private const val MaxZoom = 5f
 
 private enum class SignTool {
     Signature,
@@ -139,8 +152,13 @@ fun PdfSignScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val density = LocalDensity.current
     val snackbar = remember { SnackbarHostState() }
     val fileInfo = remember(uri) { context.queryPdfInfo(uri) }
+    var scale by remember { mutableFloatStateOf(MinZoom) }
+    var offset by remember { mutableStateOf(Offset.Zero) }
+    val latestScale by rememberUpdatedState(scale)
+    val latestOffset by rememberUpdatedState(offset)
 
     var session by remember { mutableStateOf<PdfDocumentSession?>(null) }
     var openError by remember { mutableStateOf(false) }
@@ -301,6 +319,21 @@ fun PdfSignScreen(
                         )
                     }
                 },
+                actions = {
+                    if (scale > 1.01f) {
+                        IconButton(
+                            onClick = {
+                                scale = MinZoom
+                                offset = Offset.Zero
+                            },
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.ZoomInMap,
+                                contentDescription = stringResource(R.string.reader_zoom_reset),
+                            )
+                        }
+                    }
+                },
                 colors = androsTopAppBarColors(),
             )
         },
@@ -442,70 +475,145 @@ fun PdfSignScreen(
                         .fillMaxSize()
                         .padding(innerPadding),
                 ) {
-                    LazyColumn(
-                        state = rememberLazyListState(),
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(
-                            start = 16.dp,
-                            end = 16.dp,
-                            top = 16.dp,
-                            bottom = 120.dp,
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        items(doc.pageCount, key = { it }) { pageIndex ->
-                            SignPageItem(
-                                session = doc,
-                                pageIndex = pageIndex,
-                                overlays = overlays.filter { it.pageIndex == pageIndex },
-                                selectedOverlayId = selectedOverlayId,
-                                placementActive = pendingPlacement != null &&
-                                    exportState == SignExportState.Editing,
-                                onSelectOverlay = { selectedOverlayId = it },
-                                onDeleteOverlay = { id ->
-                                    overlays = overlays.filterNot { it.id == id }
-                                    if (selectedOverlayId == id) selectedOverlayId = null
+                    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                        val viewportWidthPx = with(density) { maxWidth.toPx() }
+                        val viewportHeightPx = with(density) { maxHeight.toPx() }
+                        val isZoomed = scale > 1.01f
+
+                        LazyColumn(
+                            state = rememberLazyListState(),
+                            userScrollEnabled = !isZoomed,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .pointerInput(viewportWidthPx, viewportHeightPx) {
+                                    awaitEachGesture {
+                                        awaitFirstDown(requireUnconsumed = false)
+                                        do {
+                                            val event = awaitPointerEvent(PointerEventPass.Initial)
+                                            val pressed = event.changes.filter { it.pressed }
+                                            if (pressed.size >= 2) {
+                                                val zoomChange = event.calculateZoom()
+                                                val panChange = event.calculatePan()
+                                                val newScale = (latestScale * zoomChange)
+                                                    .coerceIn(MinZoom, MaxZoom)
+                                                val maxX =
+                                                    (viewportWidthPx * (newScale - 1f)) / 2f
+                                                val maxY =
+                                                    (viewportHeightPx * (newScale - 1f)) / 2f
+                                                val newOffset = if (newScale > 1.01f) {
+                                                    Offset(
+                                                        x = (latestOffset.x + panChange.x)
+                                                            .coerceIn(-maxX, maxX),
+                                                        y = (latestOffset.y + panChange.y)
+                                                            .coerceIn(-maxY, maxY),
+                                                    )
+                                                } else {
+                                                    Offset.Zero
+                                                }
+                                                scale = newScale
+                                                offset = newOffset
+                                                pressed.forEach { it.consume() }
+                                            }
+                                        } while (event.changes.any { it.pressed })
+                                    }
+                                }
+                                .pointerInput(viewportWidthPx, viewportHeightPx, selectedOverlayId) {
+                                    awaitEachGesture {
+                                        awaitFirstDown(requireUnconsumed = false)
+                                        do {
+                                            val event = awaitPointerEvent(PointerEventPass.Main)
+                                            val pressed = event.changes.filter { it.pressed }
+                                            if (
+                                                pressed.size == 1 &&
+                                                latestScale > 1.01f &&
+                                                selectedOverlayId == null &&
+                                                pressed.none { it.isConsumed }
+                                            ) {
+                                                val panChange = event.calculatePan()
+                                                val maxX =
+                                                    (viewportWidthPx * (latestScale - 1f)) / 2f
+                                                val maxY =
+                                                    (viewportHeightPx * (latestScale - 1f)) / 2f
+                                                offset = Offset(
+                                                    x = (latestOffset.x + panChange.x)
+                                                        .coerceIn(-maxX, maxX),
+                                                    y = (latestOffset.y + panChange.y)
+                                                        .coerceIn(-maxY, maxY),
+                                                )
+                                                pressed.forEach { it.consume() }
+                                            }
+                                        } while (event.changes.any { it.pressed })
+                                    }
+                                }
+                                .graphicsLayer {
+                                    scaleX = scale
+                                    scaleY = scale
+                                    translationX = offset.x
+                                    translationY = offset.y
                                 },
-                                onMoveOverlay = { id, dx, dy ->
-                                    overlays = overlays.map { overlay ->
-                                        if (overlay.id != id) {
-                                            overlay
-                                        } else {
-                                            overlay.copy(
-                                                left = (overlay.left + dx)
-                                                    .coerceIn(0f, 1f - overlay.width),
-                                                top = (overlay.top + dy)
-                                                    .coerceIn(0f, 1f - overlay.height),
-                                            )
+                            contentPadding = PaddingValues(
+                                start = 16.dp,
+                                end = 16.dp,
+                                top = 16.dp,
+                                bottom = 120.dp,
+                            ),
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            items(doc.pageCount, key = { it }) { pageIndex ->
+                                SignPageItem(
+                                    session = doc,
+                                    pageIndex = pageIndex,
+                                    viewScale = scale,
+                                    overlays = overlays.filter { it.pageIndex == pageIndex },
+                                    selectedOverlayId = selectedOverlayId,
+                                    placementActive = pendingPlacement != null &&
+                                        exportState == SignExportState.Editing,
+                                    onSelectOverlay = { selectedOverlayId = it },
+                                    onDeleteOverlay = { id ->
+                                        overlays = overlays.filterNot { it.id == id }
+                                        if (selectedOverlayId == id) selectedOverlayId = null
+                                    },
+                                    onMoveOverlay = { id, dx, dy ->
+                                        overlays = overlays.map { overlay ->
+                                            if (overlay.id != id) {
+                                                overlay
+                                            } else {
+                                                overlay.copy(
+                                                    left = (overlay.left + dx)
+                                                        .coerceIn(0f, 1f - overlay.width),
+                                                    top = (overlay.top + dy)
+                                                        .coerceIn(0f, 1f - overlay.height),
+                                                )
+                                            }
                                         }
-                                    }
-                                },
-                                onResizeOverlay = { id, dWidthFrac, dHeightFrac ->
-                                    overlays = overlays.map { overlay ->
-                                        if (overlay.id != id) {
-                                            overlay
-                                        } else {
-                                            val width = (overlay.width + dWidthFrac)
-                                                .coerceIn(0.08f, 0.9f)
-                                            val height = (overlay.height + dHeightFrac)
-                                                .coerceIn(0.04f, 0.7f)
-                                            overlay.copy(
-                                                left = overlay.left.coerceIn(0f, 1f - width),
-                                                top = overlay.top.coerceIn(0f, 1f - height),
-                                                width = width,
-                                                height = height,
-                                            )
+                                    },
+                                    onResizeOverlay = { id, dWidthFrac, dHeightFrac ->
+                                        overlays = overlays.map { overlay ->
+                                            if (overlay.id != id) {
+                                                overlay
+                                            } else {
+                                                val width = (overlay.width + dWidthFrac)
+                                                    .coerceIn(0.08f, 0.9f)
+                                                val height = (overlay.height + dHeightFrac)
+                                                    .coerceIn(0.04f, 0.7f)
+                                                overlay.copy(
+                                                    left = overlay.left.coerceIn(0f, 1f - width),
+                                                    top = overlay.top.coerceIn(0f, 1f - height),
+                                                    width = width,
+                                                    height = height,
+                                                )
+                                            }
                                         }
-                                    }
-                                },
-                                onPlaceAt = { left, top ->
-                                    val pending = pendingPlacement
-                                    if (pending is PendingPlacement.Stamp) {
-                                        placeStamp(pageIndex, left, top, pending)
-                                    }
-                                },
-                            )
+                                    },
+                                    onPlaceAt = { left, top ->
+                                        val pending = pendingPlacement
+                                        if (pending is PendingPlacement.Stamp) {
+                                            placeStamp(pageIndex, left, top, pending)
+                                        }
+                                    },
+                                )
+                            }
                         }
                     }
 
@@ -767,6 +875,7 @@ private fun ToolButton(
 private fun SignPageItem(
     session: PdfDocumentSession,
     pageIndex: Int,
+    viewScale: Float = 1f,
     overlays: List<PageOverlay>,
     selectedOverlayId: String?,
     placementActive: Boolean,
@@ -874,14 +983,15 @@ private fun SignPageItem(
                         .pointerInput(overlay.id, pageWidthPx, pageHeightPx) {
                             detectTapGestures(onTap = { onSelectOverlay(overlay.id) })
                         }
-                        .pointerInput(overlay.id, pageWidthPx, pageHeightPx) {
+                        .pointerInput(overlay.id, pageWidthPx, pageHeightPx, viewScale) {
                             detectDragGestures { change, dragAmount ->
                                 change.consume()
                                 onSelectOverlay(overlay.id)
+                                val scaleFactor = viewScale.coerceAtLeast(1f)
                                 onMoveOverlay(
                                     overlay.id,
-                                    dragAmount.x / pageWidthPx,
-                                    dragAmount.y / pageHeightPx,
+                                    dragAmount.x / scaleFactor / pageWidthPx,
+                                    dragAmount.y / scaleFactor / pageHeightPx,
                                 )
                             }
                         },
@@ -916,12 +1026,13 @@ private fun SignPageItem(
                                 .size(width = 18.dp, height = 28.dp)
                                 .background(Primary, RoundedCornerShape(999.dp))
                                 .border(2.dp, Color.White, RoundedCornerShape(999.dp))
-                                .pointerInput(overlay.id, pageWidthPx) {
+                                .pointerInput(overlay.id, pageWidthPx, viewScale) {
                                     detectDragGestures { change, dragAmount ->
                                         change.consume()
+                                        val scaleFactor = viewScale.coerceAtLeast(1f)
                                         onResizeOverlay(
                                             overlay.id,
-                                            dragAmount.x / pageWidthPx,
+                                            dragAmount.x / scaleFactor / pageWidthPx,
                                             0f,
                                         )
                                     }
@@ -935,13 +1046,14 @@ private fun SignPageItem(
                                 .size(width = 28.dp, height = 18.dp)
                                 .background(Primary, RoundedCornerShape(999.dp))
                                 .border(2.dp, Color.White, RoundedCornerShape(999.dp))
-                                .pointerInput(overlay.id, pageHeightPx) {
+                                .pointerInput(overlay.id, pageHeightPx, viewScale) {
                                     detectDragGestures { change, dragAmount ->
                                         change.consume()
+                                        val scaleFactor = viewScale.coerceAtLeast(1f)
                                         onResizeOverlay(
                                             overlay.id,
                                             0f,
-                                            dragAmount.y / pageHeightPx,
+                                            dragAmount.y / scaleFactor / pageHeightPx,
                                         )
                                     }
                                 },
@@ -954,13 +1066,14 @@ private fun SignPageItem(
                                 .size(26.dp)
                                 .background(Primary, CircleShape)
                                 .border(2.dp, Color.White, CircleShape)
-                                .pointerInput(overlay.id, pageWidthPx, pageHeightPx) {
+                                .pointerInput(overlay.id, pageWidthPx, pageHeightPx, viewScale) {
                                     detectDragGestures { change, dragAmount ->
                                         change.consume()
+                                        val scaleFactor = viewScale.coerceAtLeast(1f)
                                         onResizeOverlay(
                                             overlay.id,
-                                            dragAmount.x / pageWidthPx,
-                                            dragAmount.y / pageHeightPx,
+                                            dragAmount.x / scaleFactor / pageWidthPx,
+                                            dragAmount.y / scaleFactor / pageHeightPx,
                                         )
                                     }
                                 },

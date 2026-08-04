@@ -10,7 +10,7 @@ import java.io.FileInputStream
 object ImageGallerySaver {
 
     /**
-     * Saves image files into Pictures/TotalPdf (visible in gallery / files app).
+     * Saves image files into Pictures/PdfKit Pro (visible in gallery / files app).
      * @return number of files saved successfully
      */
     fun saveToPictures(context: Context, files: List<File>): Int {
@@ -27,7 +27,7 @@ object ImageGallerySaver {
                 put(MediaStore.Images.Media.DISPLAY_NAME, file.name)
                 put(MediaStore.Images.Media.MIME_TYPE, mime)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/TotalPdf")
+                    put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/PdfKit Pro")
                     put(MediaStore.Images.Media.IS_PENDING, 1)
                 }
             }

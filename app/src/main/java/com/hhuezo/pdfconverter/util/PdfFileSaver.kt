@@ -11,7 +11,7 @@ import java.io.File
 object PdfFileSaver {
 
     /**
-     * Saves a PDF into Downloads/TotalPdf and returns the content [Uri], or null on failure.
+     * Saves a PDF into Downloads/PdfKit Pro and returns the content [Uri], or null on failure.
      */
     fun saveToDownloads(context: Context, source: File, displayName: String): Uri? {
         val resolver = context.contentResolver
@@ -21,7 +21,7 @@ object PdfFileSaver {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 put(
                     MediaStore.MediaColumns.RELATIVE_PATH,
-                    Environment.DIRECTORY_DOWNLOADS + "/TotalPdf",
+                    Environment.DIRECTORY_DOWNLOADS + "/PdfKit Pro",
                 )
                 put(MediaStore.MediaColumns.IS_PENDING, 1)
             }

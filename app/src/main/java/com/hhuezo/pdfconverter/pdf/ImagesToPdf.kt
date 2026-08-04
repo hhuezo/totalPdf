@@ -180,6 +180,6 @@ class ImagesToPdf(context: Context) {
     }
 
     companion object {
-        private const val TAG = "TotalPdfScan"
+        private const val TAG = "PdfKitProScan"
     }
 }

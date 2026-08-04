@@ -297,7 +297,7 @@ fun PdfScanScreen(
                 },
                 onFailure = { error ->
                     android.util.Log.e(
-                        "TotalPdfScan",
+                        "PdfKitProScan",
                         "No se pudo crear el PDF: ${error.message}",
                         error,
                     )

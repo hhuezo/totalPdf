@@ -1,8 +1,8 @@
-# Política de privacidad — TotalPdf
+# Política de privacidad — PdfKit Pro
 
 **Última actualización:** 4 de agosto de 2026
 
-TotalPdf («la aplicación», «nosotros») es una aplicación para Android desarrollada por [hhuezo](https://github.com/hhuezo). Esta política describe qué información se utiliza, cómo se trata y qué derechos tienes como usuario.
+PdfKit Pro («la aplicación», «nosotros») es una aplicación para Android desarrollada por [hhuezo](https://github.com/hhuezo). Esta política describe qué información se utiliza, cómo se trata y qué derechos tienes como usuario.
 
 Si tienes preguntas sobre esta política, puedes contactarnos abriendo un issue en GitHub:  
 https://github.com/hhuezo/totalPdf/issues
@@ -11,7 +11,7 @@ https://github.com/hhuezo/totalPdf/issues
 
 ## 1. Resumen
 
-TotalPdf te permite leer, convertir, firmar, unir, escanear y editar archivos PDF. **El procesamiento de tus documentos se realiza en tu dispositivo.** No vendemos tus datos, no mostramos publicidad y no recopilamos información con fines de marketing.
+PdfKit Pro te permite leer, convertir, firmar, unir, escanear y editar archivos PDF. **El procesamiento de tus documentos se realiza en tu dispositivo.** No vendemos tus datos, no mostramos publicidad y no recopilamos información con fines de marketing.
 
 ---
 
@@ -36,8 +36,8 @@ La aplicación **no** solicita permiso de Internet y **no** envía tus PDFs ni i
 
 Cuando guardas un resultado, la aplicación puede almacenar archivos en tu dispositivo en:
 
-- `Descargas/TotalPdf` (PDFs)
-- `Imágenes/TotalPdf` (imágenes convertidas desde PDF)
+- `Descargas/PdfKit Pro` (PDFs)
+- `Imágenes/PdfKit Pro` (imágenes convertidas desde PDF)
 
 Estos archivos permanecen en tu dispositivo bajo tu control.
 
@@ -96,7 +96,7 @@ En versiones recientes de Android, el acceso a archivos se gestiona mediante el 
 
 ## 7. Menores de edad
 
-TotalPdf no está dirigida específicamente a menores de 13 años. No recopilamos intencionalmente datos personales de niños. Si crees que un menor nos ha proporcionado información personal, contáctanos para revisarlo.
+PdfKit Pro no está dirigida específicamente a menores de 13 años. No recopilamos intencionalmente datos personales de niños. Si crees que un menor nos ha proporcionado información personal, contáctanos para revisarlo.
 
 ---
 
@@ -112,7 +112,7 @@ Puedes en cualquier momento:
 
 - Dejar de usar funciones que requieran cámara o acceso a archivos
 - Eliminar PDFs e imágenes guardados desde tu gestor de archivos
-- Borrar los datos de la aplicación en **Ajustes → Aplicaciones → TotalPdf → Almacenamiento → Borrar datos**
+- Borrar los datos de la aplicación en **Ajustes → Aplicaciones → PdfKit Pro → Almacenamiento → Borrar datos**
 - Desinstalar la aplicación, lo que elimina los datos locales que almacena (excepto archivos que hayas guardado manualmente en Descargas o Imágenes)
 
 ---
@@ -131,4 +131,4 @@ Podemos actualizar esta política para reflejar cambios en la aplicación o requ
 
 ---
 
-*Esta política aplica a la aplicación TotalPdf (`com.hhuezo.pdfconverter`) publicada en Google Play.*
+*Esta política aplica a la aplicación PdfKit Pro (`com.hhuezo.pdfconverter`) publicada en Google Play.*

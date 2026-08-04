@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">TotalPdf</string>
+    <string name="app_name">PdfKit Pro</string>
     <string name="open_pdf">Abrir PDF</string>
     <string name="open_pdf_subtitle">Selecciona desde tu dispositivo</string>
     <string name="recent_files">Archivos recientes</string>
@@ -31,7 +31,7 @@
     <string name="delete_pages_share">Compartir</string>
     <string name="delete_pages_download">Descargar</string>
     <string name="delete_pages_share_title">Compartir PDF</string>
-    <string name="delete_pages_save_success">PDF guardado en Descargas/TotalPdf</string>
+    <string name="delete_pages_save_success">PDF guardado en Descargas/PdfKit Pro</string>
     <string name="delete_pages_download_error">No se pudo descargar el PDF</string>
     <string name="delete_pages_file_meta">%1$s • %2$d páginas</string>
     <string name="delete_pages_error_open">No se pudo abrir el PDF</string>
@@ -57,7 +57,7 @@
     <string name="merge_share">Compartir</string>
     <string name="merge_download">Descargar</string>
     <string name="merge_share_title">Compartir PDF unido</string>
-    <string name="merge_save_success">PDF guardado en Descargas/TotalPdf</string>
+    <string name="merge_save_success">PDF guardado en Descargas/PdfKit Pro</string>
     <string name="merge_download_error">No se pudo descargar el PDF</string>
     <string name="merge_already_added">Ese PDF ya está en la lista</string>
     <string name="merge_error_open">No se pudo abrir uno de los PDFs</string>
@@ -78,7 +78,7 @@
     <string name="scan_share">Compartir</string>
     <string name="scan_download">Descargar</string>
     <string name="scan_share_title">Compartir PDF escaneado</string>
-    <string name="scan_save_success">PDF guardado en Descargas/TotalPdf</string>
+    <string name="scan_save_success">PDF guardado en Descargas/PdfKit Pro</string>
     <string name="scan_download_error">No se pudo descargar el PDF</string>
     <string name="scan_page_label">Pág. %1$d</string>
     <string name="scan_remove_page">Quitar página</string>
@@ -132,7 +132,7 @@
     <string name="sign_here">Firmar aquí</string>
     <string name="sign_delete_overlay">Eliminar</string>
     <string name="sign_empty_overlays">Agrega una firma, texto o fecha antes de guardar</string>
-    <string name="sign_save_success">PDF firmado guardado en Descargas/TotalPdf</string>
+    <string name="sign_save_success">PDF firmado guardado en Descargas/PdfKit Pro</string>
     <string name="sign_download_error">No se pudo descargar el PDF firmado</string>
     <string name="sign_save_error">No se pudo firmar el PDF</string>
     <string name="sign_share_title">Compartir PDF firmado</string>
@@ -201,7 +201,7 @@
     <string name="to_image_actions_title">¿Qué deseas hacer?</string>
     <string name="to_image_share">Compartir</string>
     <string name="to_image_download">Descargar</string>
-    <string name="to_image_download_success">Guardado en Imágenes/TotalPdf (%1$d)</string>
+    <string name="to_image_download_success">Guardado en Imágenes/PdfKit Pro (%1$d)</string>
     <string name="to_image_download_error">No se pudieron guardar las imágenes</string>
     <string name="to_image_file_meta">%1$s • %2$d páginas</string>
     <string name="to_image_error_open">No se pudo abrir el PDF</string>

@@ -80,7 +80,7 @@
                 <data android:pathPattern=".*\\..*\\..*\\..*\\.pdf" />
             </intent-filter>
 
-            <!-- Compartir PDF hacia TotalPdf -->
+            <!-- Compartir PDF hacia PdfKit Pro -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />

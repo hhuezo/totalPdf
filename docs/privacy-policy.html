@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Política de privacidad — TotalPdf</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --text: #1a1a1a;
+      --muted: #555;
+      --border: #ddd;
+      --bg: #fff;
+      --link: #0969da;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --text: #e6edf3;
+        --muted: #9aa4b2;
+        --border: #30363d;
+        --bg: #0d1117;
+        --link: #58a6ff;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: var(--text);
+      background: var(--bg);
+      margin: 0;
+      padding: 2rem 1rem 4rem;
+    }
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+    h2 {
+      font-size: 1.2rem;
+      margin-top: 2rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.35rem;
+    }
+    p, li { color: var(--text); }
+    .meta { color: var(--muted); margin-bottom: 2rem; }
+    a { color: var(--link); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.95rem;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.6rem 0.75rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: rgba(127, 127, 127, 0.08); }
+    ul { padding-left: 1.25rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Política de privacidad — TotalPdf</h1>
+    <p class="meta"><strong>Última actualización:</strong> 4 de agosto de 2026</p>
+
+    <p>
+      TotalPdf («la aplicación», «nosotros») es una aplicación para Android desarrollada por
+      <a href="https://github.com/hhuezo">hhuezo</a>.
+      Esta política describe qué información se utiliza, cómo se trata y qué derechos tienes como usuario.
+    </p>
+    <p>
+      Si tienes preguntas, puedes contactarnos en
+      <a href="https://github.com/hhuezo/totalPdf/issues">GitHub Issues</a>.
+    </p>
+
+    <h2>1. Resumen</h2>
+    <p>
+      TotalPdf te permite leer, convertir, firmar, unir, escanear y editar archivos PDF.
+      <strong>El procesamiento de tus documentos se realiza en tu dispositivo.</strong>
+      No vendemos tus datos, no mostramos publicidad y no recopilamos información con fines de marketing.
+    </p>
+
+    <h2>2. Información que accede la aplicación</h2>
+    <p>La aplicación accede a los siguientes datos <strong>solo cuando tú eliges usar una función</strong>:</p>
+    <table>
+      <thead>
+        <tr><th>Tipo de dato</th><th>Para qué se usa</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Archivos PDF</td><td>Abrir, leer, convertir, firmar, unir o eliminar páginas</td></tr>
+        <tr><td>Imágenes de la galería</td><td>Crear PDFs o agregar páginas escaneadas</td></tr>
+        <tr><td>Cámara</td><td>Escanear documentos y convertirlos a PDF</td></tr>
+        <tr><td>Metadatos de archivos recientes</td><td>Nombre, tamaño, URI, fecha de última apertura y última página leída</td></tr>
+      </tbody>
+    </table>
+    <p>La aplicación <strong>no</strong> solicita permiso de Internet y <strong>no</strong> envía tus PDFs ni imágenes a servidores propios.</p>
+
+    <h2>3. Cómo se almacenan los datos</h2>
+    <h3>3.1 Archivos que creas o guardas</h3>
+    <p>Cuando guardas un resultado, la aplicación puede almacenar archivos en:</p>
+    <ul>
+      <li><code>Descargas/TotalPdf</code> (PDFs)</li>
+      <li><code>Imágenes/TotalPdf</code> (imágenes convertidas desde PDF)</li>
+    </ul>
+    <p>Estos archivos permanecen en tu dispositivo bajo tu control.</p>
+
+    <h3>3.2 Archivos recientes</h3>
+    <p>
+      Para mostrarte los PDFs abiertos recientemente, la aplicación guarda localmente (Android DataStore)
+      una lista con URI, nombre, tamaño, fecha de última apertura y última página visitada.
+      Esta información no sale de tu dispositivo.
+    </p>
+
+    <h3>3.3 Copias de seguridad del sistema</h3>
+    <p>
+      La aplicación permite las copias de seguridad automáticas de Android.
+      Dependiendo de tu dispositivo, el sistema operativo podría incluir datos de la app en copias de seguridad.
+    </p>
+
+    <h2>4. Servicios de terceros</h2>
+    <h3>4.1 Google ML Kit Document Scanner</h3>
+    <p>
+      La función de escaneo utiliza Google Play services — ML Kit Document Scanner.
+      Google puede procesar las imágenes según sus propias políticas.
+      <a href="https://policies.google.com/privacy">Política de privacidad de Google</a>.
+    </p>
+    <h3>4.2 Bibliotecas de código abierto</h3>
+    <p>
+      La aplicación utiliza bibliotecas como PDFBox Android y Android Jetpack para procesar archivos localmente.
+    </p>
+
+    <h2>5. Lo que no hacemos</h2>
+    <ul>
+      <li>No creamos cuentas de usuario</li>
+      <li>No recopilamos nombre, correo ni identificadores publicitarios</li>
+      <li>No usamos analytics ni SDKs de seguimiento</li>
+      <li>No mostramos anuncios</li>
+      <li>No vendemos ni compartimos tus documentos con fines comerciales</li>
+    </ul>
+
+    <h2>6. Permisos de Android</h2>
+    <table>
+      <thead>
+        <tr><th>Permiso</th><th>Motivo</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Cámara</td><td>Escanear documentos a PDF (opcional)</td></tr>
+        <tr><td>Almacenamiento externo (Android 9 y anteriores)</td><td>Guardar PDFs en Descargas</td></tr>
+      </tbody>
+    </table>
+
+    <h2>7. Menores de edad</h2>
+    <p>
+      TotalPdf no está dirigida específicamente a menores de 13 años.
+      No recopilamos intencionalmente datos personales de niños.
+    </p>
+
+    <h2>8. Seguridad</h2>
+    <p>
+      Procesamos tus archivos localmente. Te recomendamos mantener tu dispositivo actualizado
+      y protegido con bloqueo de pantalla.
+    </p>
+
+    <h2>9. Tus derechos y control</h2>
+    <ul>
+      <li>Dejar de usar funciones que requieran cámara o acceso a archivos</li>
+      <li>Eliminar archivos guardados desde tu gestor de archivos</li>
+      <li>Borrar datos de la app en Ajustes → Aplicaciones → TotalPdf → Almacenamiento</li>
+      <li>Desinstalar la aplicación</li>
+    </ul>
+
+    <h2>10. Cambios en esta política</h2>
+    <p>
+      Podemos actualizar esta política. Publicaremos la versión actualizada en este repositorio
+      e indicaremos la fecha de «Última actualización».
+    </p>
+
+    <h2>11. Contacto</h2>
+    <ul>
+      <li><strong>Desarrollador:</strong> hhuezo</li>
+      <li><strong>Repositorio:</strong> <a href="https://github.com/hhuezo/totalPdf">github.com/hhuezo/totalPdf</a></li>
+      <li><strong>Contacto:</strong> <a href="https://github.com/hhuezo/totalPdf/issues">GitHub Issues</a></li>
+    </ul>
+
+    <p><em>Esta política aplica a TotalPdf (<code>com.hhuezo.pdfconverter</code>) en Google Play.</em></p>
+  </main>
+</body>
+</html>

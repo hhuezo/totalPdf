@@ -24,6 +24,7 @@ import com.hhuezo.pdfconverter.R
 fun RecentFilesScreen(
     recentFiles: List<RecentPdfFile>,
     onFileClick: (RecentPdfFile) -> Unit,
+    onFileRemove: (RecentPdfFile) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (recentFiles.isEmpty()) {
@@ -61,6 +62,7 @@ fun RecentFilesScreen(
                 RecentFileRow(
                     file = file,
                     onClick = { onFileClick(file) },
+                    onRemove = { onFileRemove(file) },
                 )
             }
         }

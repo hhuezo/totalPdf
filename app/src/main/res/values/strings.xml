@@ -97,6 +97,11 @@
     <string name="settings">Configuración</string>
     <string name="no_recent_files">Aún no hay archivos recientes</string>
     <string name="no_recent_files_hint">Abre un PDF para verlo aquí</string>
+    <string name="recent_remove">Quitar de recientes</string>
+    <string name="recent_removed">Eliminado de recientes</string>
+    <string name="recent_file_not_found_title">Archivo no encontrado</string>
+    <string name="recent_file_not_found_message">«%1$s» ya no está disponible en tu dispositivo. Puede haber sido movido o eliminado.</string>
+    <string name="recent_remove_from_list">Eliminar de recientes</string>
     <string name="coming_soon">Próximamente</string>
 
     <!-- Firmar PDF -->

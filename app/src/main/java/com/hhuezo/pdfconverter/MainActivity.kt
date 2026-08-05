@@ -36,13 +36,16 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -87,6 +90,7 @@ import com.hhuezo.pdfconverter.ui.tools.ToolsScreen
 import com.hhuezo.pdfconverter.util.PdfDeleter
 import com.hhuezo.pdfconverter.util.formatFileSize
 import com.hhuezo.pdfconverter.util.formatRecentDate
+import com.hhuezo.pdfconverter.util.isPdfUriAccessible
 import com.hhuezo.pdfconverter.util.queryPdfInfo
 import com.hhuezo.pdfconverter.util.takePersistableReadPermission
 import kotlinx.coroutines.Dispatchers
@@ -200,6 +204,7 @@ fun AndrosApp(
     var mergeActive by rememberSaveable { mutableStateOf(false) }
     var scanActive by rememberSaveable { mutableStateOf(false) }
     var startupPermissionsAsked by rememberSaveable { mutableStateOf(false) }
+    var missingRecentPdf by remember { mutableStateOf<RecentPdf?>(null) }
 
     val startupPermissionsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
@@ -328,8 +333,29 @@ fun AndrosApp(
         onExternalPdfConsumed()
     }
 
+    fun removeFromRecents(uri: String) {
+        scope.launch {
+            repository.remove(uri)
+            Toast.makeText(
+                context,
+                context.getString(R.string.recent_removed),
+                Toast.LENGTH_SHORT,
+            ).show()
+        }
+    }
+
     fun openRecent(pdf: RecentPdf) {
-        openUri(Uri.parse(pdf.uri), preferredPage = pdf.lastPageIndex)
+        scope.launch {
+            val uri = Uri.parse(pdf.uri)
+            val accessible = withContext(Dispatchers.IO) {
+                context.isPdfUriAccessible(uri)
+            }
+            if (accessible) {
+                openUri(uri, preferredPage = pdf.lastPageIndex)
+            } else {
+                missingRecentPdf = pdf
+            }
+        }
     }
 
     val pickPdf = rememberLauncherForActivityResult(
@@ -394,6 +420,33 @@ fun AndrosApp(
     }
 
     BackHandler(onBack = ::navigateBack)
+
+    missingRecentPdf?.let { pdf ->
+        AlertDialog(
+            onDismissRequest = { missingRecentPdf = null },
+            title = {
+                Text(text = stringResource(R.string.recent_file_not_found_title))
+            },
+            text = {
+                Text(text = stringResource(R.string.recent_file_not_found_message, pdf.displayName))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        removeFromRecents(pdf.uri)
+                        missingRecentPdf = null
+                    },
+                ) {
+                    Text(text = stringResource(R.string.recent_remove_from_list))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { missingRecentPdf = null }) {
+                    Text(text = stringResource(R.string.reader_cancel))
+                }
+            },
+        )
+    }
 
     val activeSignUri = signPdfUri
     if (activeSignUri != null) {
@@ -501,6 +554,7 @@ fun AndrosApp(
                 onRecentFileClick = { file ->
                     recentPdfs.firstOrNull { it.uri == file.id }?.let(::openRecent)
                 },
+                onRecentFileRemove = { file -> removeFromRecents(file.id) },
             )
 
             AppDestination.Recent -> RecentFilesScreen(
@@ -509,6 +563,7 @@ fun AndrosApp(
                 onFileClick = { file ->
                     recentPdfs.firstOrNull { it.uri == file.id }?.let(::openRecent)
                 },
+                onFileRemove = { file -> removeFromRecents(file.id) },
             )
 
             AppDestination.Tools -> ToolsScreen(

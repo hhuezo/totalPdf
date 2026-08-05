@@ -21,7 +21,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -52,6 +54,7 @@ fun HomeScreen(
     onOpenPdf: () -> Unit = {},
     onViewAllRecent: () -> Unit = {},
     onRecentFileClick: (RecentPdfFile) -> Unit = {},
+    onRecentFileRemove: (RecentPdfFile) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -65,6 +68,7 @@ fun HomeScreen(
             files = recentFiles,
             onViewAll = onViewAllRecent,
             onFileClick = onRecentFileClick,
+            onFileRemove = onRecentFileRemove,
             modifier = Modifier.weight(1f),
         )
     }
@@ -133,6 +137,7 @@ private fun RecentFilesSection(
     files: List<RecentPdfFile>,
     onViewAll: () -> Unit,
     onFileClick: (RecentPdfFile) -> Unit,
+    onFileRemove: (RecentPdfFile) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
@@ -170,6 +175,7 @@ private fun RecentFilesSection(
                     RecentFileRow(
                         file = file,
                         onClick = { onFileClick(file) },
+                        onRemove = { onFileRemove(file) },
                     )
                 }
             }
@@ -212,6 +218,7 @@ private fun EmptyRecentFiles() {
 fun RecentFileRow(
     file: RecentPdfFile,
     onClick: () -> Unit,
+    onRemove: (() -> Unit)? = null,
 ) {
     Row(
         modifier = Modifier
@@ -224,7 +231,7 @@ fun RecentFileRow(
                 shape = RoundedCornerShape(16.dp),
             )
             .clickable(onClick = onClick)
-            .padding(12.dp),
+            .padding(start = 12.dp, end = 4.dp, top = 12.dp, bottom = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -255,6 +262,15 @@ fun RecentFileRow(
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
             )
+        }
+        if (onRemove != null) {
+            IconButton(onClick = onRemove) {
+                Icon(
+                    imageVector = Icons.Outlined.Close,
+                    contentDescription = stringResource(R.string.recent_remove),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }

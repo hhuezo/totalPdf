@@ -33,6 +33,12 @@ fun Context.queryPdfInfo(uri: Uri): PdfFileInfo {
     return PdfFileInfo(displayName = name, sizeBytes = size)
 }
 
+fun Context.isPdfUriAccessible(uri: Uri): Boolean {
+    return runCatching {
+        contentResolver.openFileDescriptor(uri, "r")?.use { true } ?: false
+    }.getOrDefault(false)
+}
+
 fun Context.takePersistableReadPermission(uri: Uri, intentFlags: Int = 0) {
     val flags = (intentFlags and (
         Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION

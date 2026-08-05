@@ -99,6 +99,7 @@ import com.hhuezo.pdfconverter.pdf.PdfDocumentSession
 import com.hhuezo.pdfconverter.pdf.PdfSigner
 import com.hhuezo.pdfconverter.pdf.PdfStampOverlay
 import com.hhuezo.pdfconverter.ui.theme.androsTopAppBarColors
+import com.hhuezo.pdfconverter.ui.theme.navigationBarInsetPadding
 import com.hhuezo.pdfconverter.ui.theme.Primary
 import com.hhuezo.pdfconverter.ui.theme.PrimaryContainer
 import com.hhuezo.pdfconverter.util.PdfFileSaver
@@ -339,6 +340,7 @@ fun PdfSignScreen(
         },
         bottomBar = {
             Surface(
+                modifier = Modifier.navigationBarInsetPadding(),
                 color = Color.White,
                 shadowElevation = 8.dp,
             ) {

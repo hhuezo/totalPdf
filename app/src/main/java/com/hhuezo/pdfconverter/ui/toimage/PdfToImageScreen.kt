@@ -83,6 +83,7 @@ import com.hhuezo.pdfconverter.pdf.PdfToImageConverter
 import com.hhuezo.pdfconverter.pdf.countPagesInRange
 import com.hhuezo.pdfconverter.pdf.parsePageRange
 import com.hhuezo.pdfconverter.ui.theme.androsTopAppBarColors
+import com.hhuezo.pdfconverter.ui.theme.navigationBarInsetPadding
 import com.hhuezo.pdfconverter.ui.theme.PrimaryFixedDim
 import com.hhuezo.pdfconverter.ui.theme.SecondaryContainer
 import com.hhuezo.pdfconverter.ui.theme.SecondaryFixed
@@ -215,6 +216,7 @@ fun PdfToImageScreen(
         },
         bottomBar = {
             Surface(
+                modifier = Modifier.navigationBarInsetPadding(),
                 color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 8.dp,
             ) {

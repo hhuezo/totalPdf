@@ -95,6 +95,7 @@ import androidx.compose.ui.unit.dp
 import android.graphics.Paint as AndroidPaint
 import android.graphics.RectF as AndroidRectF
 import com.hhuezo.pdfconverter.ui.theme.androsTopAppBarColors
+import com.hhuezo.pdfconverter.ui.theme.navigationBarInsetPadding
 import com.hhuezo.pdfconverter.R
 import com.hhuezo.pdfconverter.pdf.PdfDocumentSession
 import com.hhuezo.pdfconverter.pdf.PdfHighlightRect
@@ -783,6 +784,7 @@ private fun SearchResultsBar(
     onNext: () -> Unit,
 ) {
     Surface(
+        modifier = Modifier.navigationBarInsetPadding(),
         color = MaterialTheme.colorScheme.surface,
         shadowElevation = 6.dp,
     ) {

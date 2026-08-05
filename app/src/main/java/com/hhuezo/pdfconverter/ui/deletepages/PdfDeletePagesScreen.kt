@@ -74,6 +74,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.hhuezo.pdfconverter.ui.theme.androsTopAppBarColors
+import com.hhuezo.pdfconverter.ui.theme.navigationBarInsetPadding
 import com.hhuezo.pdfconverter.R
 import com.hhuezo.pdfconverter.pdf.PdfDocumentSession
 import com.hhuezo.pdfconverter.pdf.PdfPageRemover
@@ -274,6 +275,7 @@ fun PdfDeletePagesScreen(
         },
         bottomBar = {
             Surface(
+                modifier = Modifier.navigationBarInsetPadding(),
                 color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 8.dp,
             ) {

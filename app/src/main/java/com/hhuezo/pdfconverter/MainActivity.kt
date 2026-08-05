@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -81,6 +80,7 @@ import com.hhuezo.pdfconverter.ui.reader.PdfReaderScreen
 import com.hhuezo.pdfconverter.ui.scan.PdfScanScreen
 import com.hhuezo.pdfconverter.ui.sign.PdfSignScreen
 import com.hhuezo.pdfconverter.ui.theme.androsTopAppBarColors
+import com.hhuezo.pdfconverter.ui.theme.navigationBarInsetPadding
 import com.hhuezo.pdfconverter.ui.theme.AndrosTheme
 import com.hhuezo.pdfconverter.ui.theme.Primary
 import com.hhuezo.pdfconverter.ui.theme.PrimaryFixed
@@ -638,7 +638,7 @@ private fun AndrosBottomBar(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .navigationBarsPadding()
+                    .navigationBarInsetPadding()
                     .padding(horizontal = 12.dp, vertical = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {

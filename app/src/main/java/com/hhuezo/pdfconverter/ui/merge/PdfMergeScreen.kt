@@ -76,6 +76,7 @@ import com.hhuezo.pdfconverter.R
 import com.hhuezo.pdfconverter.data.RecentPdfsRepository
 import com.hhuezo.pdfconverter.pdf.PdfMerger
 import com.hhuezo.pdfconverter.ui.theme.androsTopAppBarColors
+import com.hhuezo.pdfconverter.ui.theme.navigationBarInsetPadding
 import com.hhuezo.pdfconverter.ui.theme.PrimaryFixedDim
 import com.hhuezo.pdfconverter.util.PdfFileSaver
 import com.hhuezo.pdfconverter.util.formatFileSize
@@ -348,6 +349,7 @@ fun PdfMergeScreen(
         },
         bottomBar = {
             Surface(
+                modifier = Modifier.navigationBarInsetPadding(),
                 color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 8.dp,
             ) {

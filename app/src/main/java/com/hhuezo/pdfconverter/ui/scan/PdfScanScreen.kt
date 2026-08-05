@@ -79,6 +79,7 @@ import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
 import com.hhuezo.pdfconverter.ui.theme.androsTopAppBarColors
+import com.hhuezo.pdfconverter.ui.theme.navigationBarInsetPadding
 import com.hhuezo.pdfconverter.R
 import com.hhuezo.pdfconverter.pdf.ImagesToPdf
 import com.hhuezo.pdfconverter.util.PdfFileSaver
@@ -343,6 +344,7 @@ fun PdfScanScreen(
         },
         bottomBar = {
             Surface(
+                modifier = Modifier.navigationBarInsetPadding(),
                 color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 8.dp,
             ) {

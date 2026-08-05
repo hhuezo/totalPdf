@@ -1,11 +1,13 @@
 package com.hhuezo.pdfconverter.ui.theme
 
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 
 private val LightColorScheme = lightColorScheme(
     primary = Primary,
@@ -56,6 +58,9 @@ fun AndrosTheme(content: @Composable () -> Unit) {
 /** Alias for compatibility with generated previews / older references. */
 @Composable
 fun PdfConverterTheme(content: @Composable () -> Unit) = AndrosTheme(content = content)
+
+/** Reserves space above the system navigation bar (gestures or 3-button). */
+fun Modifier.navigationBarInsetPadding(): Modifier = navigationBarsPadding()
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

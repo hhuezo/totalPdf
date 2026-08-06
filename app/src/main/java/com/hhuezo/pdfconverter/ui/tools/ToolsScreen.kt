@@ -16,7 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AutoStories
+import androidx.compose.material.icons.outlined.Rotate90DegreesCw
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.DocumentScanner
 import androidx.compose.material.icons.outlined.Draw
@@ -39,19 +39,15 @@ import com.hhuezo.pdfconverter.R
 import com.hhuezo.pdfconverter.ui.theme.AndrosTheme
 
 enum class QuickToolId {
-    Read,
     ToImage,
     Sign,
     DeletePages,
+    RotatePages,
     Merge,
     Scan,
 }
 
 // Distinct soft tones so each tool is easy to spot at a glance.
-private val ReadCardBg = Color(0xFFD6E4FF)
-private val ReadIconTint = Color(0xFF1E4B8F)
-private val ReadText = Color(0xFF0F2A52)
-
 private val ImageCardBg = Color(0xFFD8F3E5)
 private val ImageIconTint = Color(0xFF1B6B45)
 private val ImageText = Color(0xFF0E3D28)
@@ -63,6 +59,10 @@ private val SignText = Color(0xFF5C2A08)
 private val DeleteCardBg = Color(0xFFFFD6DE)
 private val DeleteIconTint = Color(0xFF9B1B3A)
 private val DeleteText = Color(0xFF5C0F22)
+
+private val RotateCardBg = Color(0xFFFFF0CC)
+private val RotateIconTint = Color(0xFF8A5A00)
+private val RotateText = Color(0xFF4A3500)
 
 private val MergeCardBg = Color(0xFFE6D9FF)
 private val MergeIconTint = Color(0xFF5B2FA0)
@@ -90,16 +90,6 @@ fun ToolsScreen(
 ) {
     val tools = listOf(
         QuickTool(
-            titleRes = R.string.read_pdf,
-            subtitleRes = R.string.read_pdf_subtitle,
-            icon = Icons.Outlined.AutoStories,
-            cardBackground = ReadCardBg,
-            iconBackground = Color.White.copy(alpha = 0.9f),
-            iconTint = ReadIconTint,
-            titleColor = ReadText,
-            subtitleColor = ReadText.copy(alpha = 0.72f),
-        ) to QuickToolId.Read,
-        QuickTool(
             titleRes = R.string.pdf_to_image,
             subtitleRes = R.string.pdf_to_image_subtitle,
             icon = Icons.Outlined.Image,
@@ -119,6 +109,16 @@ fun ToolsScreen(
             titleColor = DeleteText,
             subtitleColor = DeleteText.copy(alpha = 0.72f),
         ) to QuickToolId.DeletePages,
+        QuickTool(
+            titleRes = R.string.rotate_pages_title,
+            subtitleRes = R.string.rotate_pages_subtitle,
+            icon = Icons.Outlined.Rotate90DegreesCw,
+            cardBackground = RotateCardBg,
+            iconBackground = Color.White.copy(alpha = 0.9f),
+            iconTint = RotateIconTint,
+            titleColor = RotateText,
+            subtitleColor = RotateText.copy(alpha = 0.72f),
+        ) to QuickToolId.RotatePages,
         QuickTool(
             titleRes = R.string.merge_pdfs,
             subtitleRes = R.string.merge_pdfs_subtitle,

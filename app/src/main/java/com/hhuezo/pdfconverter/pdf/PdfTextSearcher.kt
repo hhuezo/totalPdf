@@ -33,6 +33,42 @@ data class PdfSearchResult(
 class PdfTextSearcher(context: Context) {
 
     private val appContext = context.applicationContext
+    private val pageLayerCache = mutableMapOf<String, PdfPageTextLayer>()
+
+    fun loadPageTextLayer(uri: Uri, pageIndex: Int): PdfPageTextLayer {
+        val cacheKey = "${uri}#$pageIndex"
+        pageLayerCache[cacheKey]?.let { return it }
+
+        ensurePdfBoxInitialized(appContext)
+
+        val input = appContext.contentResolver.openInputStream(uri)
+            ?: error("No se pudo abrir el PDF para leer texto")
+
+        val layer = input.use { stream ->
+            PDDocument.load(stream).use { document ->
+                require(pageIndex in 0 until document.numberOfPages) {
+                    "Página fuera de rango: $pageIndex"
+                }
+                val pageNumber = pageIndex + 1
+                val collector = PageTextCollector().apply {
+                    startPage = pageNumber
+                    endPage = pageNumber
+                    sortByPosition = true
+                }
+                collector.getText(document)
+                PdfPageTextLayer(
+                    pageIndex = pageIndex,
+                    glyphs = buildGlyphs(collector.positions),
+                )
+            }
+        }
+        pageLayerCache[cacheKey] = layer
+        return layer
+    }
+
+    fun clearPageTextCache() {
+        pageLayerCache.clear()
+    }
 
     fun search(uri: Uri, query: String): PdfSearchResult {
         val needle = normalize(query)
@@ -114,6 +150,32 @@ class PdfTextSearcher(context: Context) {
         while (start < end && text[start] == ' ') start++
         while (end > start && text[end - 1] == ' ') end--
         return text.substring(start, end) to map.subList(start, end).toList()
+    }
+
+    private fun buildGlyphs(positions: List<TextPosition>): List<PdfTextGlyph> {
+        if (positions.isEmpty()) return emptyList()
+        val sample = positions.first()
+        val (displayWidth, displayHeight) = displaySize(sample)
+        if (displayWidth <= 0f || displayHeight <= 0f) return emptyList()
+
+        return positions.mapNotNull { position ->
+            val unicode = position.unicode?.takeIf { it.isNotEmpty() } ?: return@mapNotNull null
+            val glyphHeight = position.height
+                .coerceAtLeast(position.fontSizeInPt * 0.7f)
+                .coerceAtLeast(4f)
+            val glyphWidth = position.width.coerceAtLeast(1f)
+            val left = (position.x / displayWidth).coerceIn(0f, 1f)
+            val top = ((position.y - glyphHeight) / displayHeight).coerceIn(0f, 1f)
+            val right = ((position.x + glyphWidth) / displayWidth).coerceIn(0f, 1f)
+            val bottom = ((position.y + glyphHeight * 0.2f) / displayHeight).coerceIn(0f, 1f)
+            PdfTextGlyph(
+                text = unicode,
+                left = left,
+                top = top,
+                width = (right - left).coerceAtLeast(0.002f),
+                height = (bottom - top).coerceAtLeast(0.004f),
+            )
+        }
     }
 
     private fun buildHighlightRects(positions: List<TextPosition>): List<PdfHighlightRect> {

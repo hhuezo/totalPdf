@@ -217,6 +217,12 @@
     <string name="reader_search_error">No se pudo buscar en el PDF</string>
     <string name="reader_search_searching">Buscando…</string>
     <string name="reader_search_page">Pág. %1$d</string>
+    <string name="reader_copy">Copiar</string>
+    <string name="reader_copied">Texto copiado</string>
+    <string name="reader_selection_clear">Cerrar selección</string>
+    <string name="reader_selection_no_text">No hay texto para seleccionar en esta página</string>
+    <string name="reader_selection_handle_start">Inicio de selección</string>
+    <string name="reader_selection_handle_end">Fin de selección</string>
     <string name="file_size_kb">%1$d KB</string>
     <string name="file_size_mb">%1$.1f MB</string>
     <string name="recent_meta">%1$s • %2$s</string>

@@ -88,7 +88,6 @@ import com.hhuezo.pdfconverter.ui.theme.PrimaryFixed
 import com.hhuezo.pdfconverter.ui.toimage.PdfToImageScreen
 import com.hhuezo.pdfconverter.ui.tools.QuickToolId
 import com.hhuezo.pdfconverter.ui.tools.ToolsScreen
-import com.hhuezo.pdfconverter.util.PdfDeleter
 import com.hhuezo.pdfconverter.util.formatFileSize
 import com.hhuezo.pdfconverter.util.formatRecentDate
 import com.hhuezo.pdfconverter.util.isPdfUriAccessible
@@ -560,24 +559,6 @@ fun AndrosApp(
             onRotatePages = {
                 rotatePagesUri = activeUri
                 readerUri = null
-            },
-            onDeletePdf = {
-                val uriToDelete = Uri.parse(activeUri)
-                scope.launch {
-                    val deleted = withContext(Dispatchers.IO) {
-                        PdfDeleter.delete(context, uriToDelete)
-                    }
-                    repository.remove(activeUri)
-                    readerUri = null
-                    Toast.makeText(
-                        context,
-                        context.getString(
-                            if (deleted) R.string.reader_delete_success
-                            else R.string.reader_delete_error,
-                        ),
-                        Toast.LENGTH_SHORT,
-                    ).show()
-                }
             },
         )
         return

@@ -6,8 +6,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculatePan
@@ -42,7 +40,6 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.Draw
 import androidx.compose.material.icons.outlined.ExpandLess
@@ -157,7 +154,6 @@ fun PdfReaderScreen(
     onSignPdf: () -> Unit = {},
     onDeletePages: () -> Unit = {},
     onRotatePages: () -> Unit = {},
-    onDeletePdf: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -174,7 +170,6 @@ fun PdfReaderScreen(
     var scale by remember { mutableFloatStateOf(MinZoom) }
     var offset by remember { mutableStateOf(Offset.Zero) }
     var showGoToPage by remember { mutableStateOf(false) }
-    var showDeleteConfirm by remember { mutableStateOf(false) }
     var actionsBarVisible by remember { mutableStateOf(true) }
     var pageInput by remember { mutableStateOf("") }
     var pageInputError by remember { mutableStateOf(false) }
@@ -480,7 +475,6 @@ fun PdfReaderScreen(
                         onConvertToImage = onConvertToImage,
                         onDeletePages = onDeletePages,
                         onRotatePages = onRotatePages,
-                        onDeletePdf = { showDeleteConfirm = true },
                     )
                 }
 
@@ -731,31 +725,6 @@ fun PdfReaderScreen(
         )
     }
 
-    if (showDeleteConfirm) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            title = { Text(stringResource(R.string.reader_delete_title)) },
-            text = { Text(stringResource(R.string.reader_delete_message)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showDeleteConfirm = false
-                        onDeletePdf()
-                    },
-                ) {
-                    Text(
-                        text = stringResource(R.string.reader_delete_confirm),
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text(stringResource(R.string.reader_cancel))
-                }
-            },
-        )
-    }
 }
 
 @Composable
@@ -765,7 +734,6 @@ private fun ReaderActionsBar(
     onConvertToImage: () -> Unit,
     onDeletePages: () -> Unit,
     onRotatePages: () -> Unit,
-    onDeletePdf: () -> Unit,
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surface,
@@ -774,9 +742,8 @@ private fun ReaderActionsBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
                 .padding(horizontal = 4.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(2.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.Top,
         ) {
             ReaderActionItem(
@@ -785,7 +752,7 @@ private fun ReaderActionsBar(
                 contentDescription = stringResource(R.string.reader_sign),
                 enabled = enabled,
                 onClick = onSignPdf,
-                modifier = Modifier.width(72.dp),
+                modifier = Modifier.weight(1f),
             )
             ReaderActionItem(
                 icon = Icons.Outlined.Image,
@@ -793,7 +760,7 @@ private fun ReaderActionsBar(
                 contentDescription = stringResource(R.string.reader_convert_to_image),
                 enabled = enabled,
                 onClick = onConvertToImage,
-                modifier = Modifier.width(72.dp),
+                modifier = Modifier.weight(1f),
             )
             ReaderActionItem(
                 icon = Icons.Outlined.Rotate90DegreesCw,
@@ -801,7 +768,7 @@ private fun ReaderActionsBar(
                 contentDescription = stringResource(R.string.reader_rotate_pages),
                 enabled = enabled,
                 onClick = onRotatePages,
-                modifier = Modifier.width(72.dp),
+                modifier = Modifier.weight(1f),
             )
             ReaderActionItem(
                 icon = Icons.Outlined.DeleteSweep,
@@ -809,17 +776,7 @@ private fun ReaderActionsBar(
                 contentDescription = stringResource(R.string.reader_delete_pages),
                 enabled = enabled,
                 onClick = onDeletePages,
-                modifier = Modifier.width(72.dp),
-            )
-            ReaderActionItem(
-                icon = Icons.Outlined.Delete,
-                label = stringResource(R.string.reader_action_delete),
-                contentDescription = stringResource(R.string.reader_delete),
-                enabled = enabled,
-                onClick = onDeletePdf,
-                tint = MaterialTheme.colorScheme.error,
-                labelColor = MaterialTheme.colorScheme.error,
-                modifier = Modifier.width(72.dp),
+                modifier = Modifier.weight(1f),
             )
         }
     }

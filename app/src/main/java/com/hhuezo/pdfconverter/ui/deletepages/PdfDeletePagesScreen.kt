@@ -33,6 +33,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.DeleteSweep
+import androidx.compose.material.icons.outlined.FilterNone
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material.icons.outlined.Share
@@ -40,6 +41,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -76,6 +78,7 @@ import androidx.core.content.FileProvider
 import com.hhuezo.pdfconverter.ui.theme.androsTopAppBarColors
 import com.hhuezo.pdfconverter.ui.theme.navigationBarInsetPadding
 import com.hhuezo.pdfconverter.R
+import com.hhuezo.pdfconverter.pdf.PdfBlankPageDetector
 import com.hhuezo.pdfconverter.pdf.PdfDocumentSession
 import com.hhuezo.pdfconverter.pdf.PdfPageRemover
 import com.hhuezo.pdfconverter.util.PdfFileSaver
@@ -108,6 +111,8 @@ fun PdfDeletePagesScreen(
     var session by remember { mutableStateOf<PdfDocumentSession?>(null) }
     var openError by remember { mutableStateOf(false) }
     var selectedPages by remember { mutableStateOf(setOf<Int>()) }
+    var blankPages by remember(uri) { mutableStateOf(setOf<Int>()) }
+    var isDetectingBlanks by remember { mutableStateOf(false) }
     var uiState by remember { mutableStateOf(DeleteUiState.Idle) }
     var outputFile by remember { mutableStateOf<File?>(null) }
     var removedCount by remember { mutableIntStateOf(0) }
@@ -178,6 +183,53 @@ fun PdfDeletePagesScreen(
         }
         uiState = DeleteUiState.Idle
         outputFile = null
+    }
+
+    fun selectBlankPages() {
+        val doc = session ?: return
+        if (isDetectingBlanks || uiState == DeleteUiState.Processing) return
+        isDetectingBlanks = true
+        scope.launch {
+            val detected = withContext(Dispatchers.Default) {
+                runCatching { PdfBlankPageDetector.findBlankPages(doc) }.getOrElse { emptyList() }
+            }
+            blankPages = detected.toSet()
+            isDetectingBlanks = false
+
+            when {
+                detected.isEmpty() -> {
+                    snackbar.showSnackbar(context.getString(R.string.delete_pages_no_blank))
+                }
+                else -> {
+                    val maxSelectable = doc.pageCount - 1
+                    var newSelection = selectedPages + detected.toSet()
+                    val trimmed = newSelection.size > maxSelectable
+                    if (trimmed) {
+                        val pageToKeep = (0 until doc.pageCount)
+                            .firstOrNull { it !in blankPages }
+                            ?: detected.minOrNull()
+                            ?: 0
+                        newSelection = newSelection - pageToKeep
+                        if (newSelection.size > maxSelectable) {
+                            newSelection = newSelection.sorted().take(maxSelectable).toSet()
+                        }
+                    }
+                    selectedPages = newSelection
+                    uiState = DeleteUiState.Idle
+                    outputFile = null
+                    snackbar.showSnackbar(
+                        if (trimmed) {
+                            context.getString(R.string.delete_pages_blank_partial)
+                        } else {
+                            context.getString(
+                                R.string.delete_pages_blank_selected,
+                                detected.size,
+                            )
+                        },
+                    )
+                }
+            }
+        }
     }
 
     fun runDelete() {
@@ -442,20 +494,44 @@ fun PdfDeletePagesScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         item {
-                            Text(
-                                text = stringResource(R.string.delete_pages_tap_hint),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(horizontal = 8.dp, vertical = 4.dp),
-                            )
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.delete_pages_tap_hint),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                FilledTonalButton(
+                                    onClick = ::selectBlankPages,
+                                    enabled = uiState != DeleteUiState.Processing && !isDetectingBlanks,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(50),
+                                ) {
+                                    if (isDetectingBlanks) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(18.dp),
+                                            strokeWidth = 2.dp,
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(stringResource(R.string.delete_pages_detecting_blank))
+                                    } else {
+                                        Icon(Icons.Outlined.FilterNone, contentDescription = null)
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(stringResource(R.string.delete_pages_select_blank))
+                                    }
+                                }
+                            }
                         }
                         items(doc.pageCount, key = { it }) { pageIndex ->
                             SelectablePdfPage(
                                 session = doc,
                                 pageIndex = pageIndex,
                                 selected = pageIndex in selectedPages,
+                                isBlank = pageIndex in blankPages,
                                 targetWidthPx = renderWidthPx,
                                 enabled = uiState != DeleteUiState.Processing,
                                 onToggle = { togglePage(pageIndex) },
@@ -474,6 +550,7 @@ private fun SelectablePdfPage(
     session: PdfDocumentSession,
     pageIndex: Int,
     selected: Boolean,
+    isBlank: Boolean,
     targetWidthPx: Int,
     enabled: Boolean,
     onToggle: () -> Unit,
@@ -549,6 +626,25 @@ private fun SelectablePdfPage(
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                 )
+            }
+
+            if (isBlank) {
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(10.dp),
+                    shape = RoundedCornerShape(6.dp),
+                    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.95f),
+                    shadowElevation = 1.dp,
+                ) {
+                    Text(
+                        text = stringResource(R.string.delete_pages_blank_badge),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    )
+                }
             }
 
             IconButton(

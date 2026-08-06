@@ -16,6 +16,12 @@
     <string name="delete_pages_subtitle">Quitar páginas del PDF</string>
     <string name="delete_pages_title">Eliminar páginas</string>
     <string name="delete_pages_tap_hint">Toca el icono de cada página para marcarla y eliminarla.</string>
+    <string name="delete_pages_select_blank">Seleccionar en blanco</string>
+    <string name="delete_pages_detecting_blank">Detectando páginas en blanco…</string>
+    <string name="delete_pages_blank_badge">En blanco</string>
+    <string name="delete_pages_no_blank">No se encontraron páginas en blanco</string>
+    <string name="delete_pages_blank_selected">%1$d páginas en blanco seleccionadas</string>
+    <string name="delete_pages_blank_partial">Páginas en blanco seleccionadas (debe quedar al menos una)</string>
     <string name="delete_pages_selection_meta">%1$d a eliminar · %2$d quedarán</string>
     <string name="delete_pages_page_label">Pág. %1$d</string>
     <string name="delete_pages_mark">Marcar para eliminar</string>

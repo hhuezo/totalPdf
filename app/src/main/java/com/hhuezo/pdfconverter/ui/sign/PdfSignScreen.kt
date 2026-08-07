@@ -11,7 +11,6 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateZoom
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,7 +44,9 @@ import androidx.compose.material.icons.outlined.Draw
 import androidx.compose.material.icons.outlined.Event
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Title
+import androidx.compose.material.icons.outlined.ZoomIn
 import androidx.compose.material.icons.outlined.ZoomInMap
+import androidx.compose.material.icons.outlined.ZoomOut
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -83,7 +84,11 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerInputChange
+import androidx.compose.ui.input.pointer.PointerInputScope
+import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -158,8 +163,27 @@ fun PdfSignScreen(
     val fileInfo = remember(uri) { context.queryPdfInfo(uri) }
     var scale by remember { mutableFloatStateOf(MinZoom) }
     var offset by remember { mutableStateOf(Offset.Zero) }
+    var viewportWidthPx by remember { mutableFloatStateOf(0f) }
+    var viewportHeightPx by remember { mutableFloatStateOf(0f) }
     val latestScale by rememberUpdatedState(scale)
     val latestOffset by rememberUpdatedState(offset)
+    var isAdjustingOverlay by remember { mutableStateOf(false) }
+    val latestIsAdjustingOverlay by rememberUpdatedState(isAdjustingOverlay)
+
+    fun applyZoom(targetScale: Float) {
+        val newScale = targetScale.coerceIn(MinZoom, MaxZoom)
+        scale = newScale
+        if (newScale <= 1.01f || viewportWidthPx <= 0f || viewportHeightPx <= 0f) {
+            offset = Offset.Zero
+            return
+        }
+        val maxX = (viewportWidthPx * (newScale - 1f)) / 2f
+        val maxY = (viewportHeightPx * (newScale - 1f)) / 2f
+        offset = Offset(
+            x = offset.x.coerceIn(-maxX, maxX),
+            y = offset.y.coerceIn(-maxY, maxY),
+        )
+    }
 
     var session by remember { mutableStateOf<PdfDocumentSession?>(null) }
     var openError by remember { mutableStateOf(false) }
@@ -321,12 +345,27 @@ fun PdfSignScreen(
                     }
                 },
                 actions = {
+                    IconButton(
+                        onClick = { applyZoom(scale - 0.5f) },
+                        enabled = scale > 1.01f,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.ZoomOut,
+                            contentDescription = stringResource(R.string.reader_zoom_out),
+                        )
+                    }
+                    IconButton(
+                        onClick = { applyZoom(scale + 0.5f) },
+                        enabled = scale < MaxZoom,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.ZoomIn,
+                            contentDescription = stringResource(R.string.reader_zoom_in),
+                        )
+                    }
                     if (scale > 1.01f) {
                         IconButton(
-                            onClick = {
-                                scale = MinZoom
-                                offset = Offset.Zero
-                            },
+                            onClick = { applyZoom(MinZoom) },
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.ZoomInMap,
@@ -478,16 +517,20 @@ fun PdfSignScreen(
                         .padding(innerPadding),
                 ) {
                     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-                        val viewportWidthPx = with(density) { maxWidth.toPx() }
-                        val viewportHeightPx = with(density) { maxHeight.toPx() }
+                        val measuredWidthPx = with(density) { maxWidth.toPx() }
+                        val measuredHeightPx = with(density) { maxHeight.toPx() }
+                        LaunchedEffect(measuredWidthPx, measuredHeightPx) {
+                            viewportWidthPx = measuredWidthPx
+                            viewportHeightPx = measuredHeightPx
+                        }
                         val isZoomed = scale > 1.01f
 
                         LazyColumn(
                             state = rememberLazyListState(),
-                            userScrollEnabled = !isZoomed,
+                            userScrollEnabled = !isZoomed && !isAdjustingOverlay,
                             modifier = Modifier
                                 .fillMaxSize()
-                                .pointerInput(viewportWidthPx, viewportHeightPx) {
+                                .pointerInput(measuredWidthPx, measuredHeightPx) {
                                     awaitEachGesture {
                                         awaitFirstDown(requireUnconsumed = false)
                                         do {
@@ -499,9 +542,9 @@ fun PdfSignScreen(
                                                 val newScale = (latestScale * zoomChange)
                                                     .coerceIn(MinZoom, MaxZoom)
                                                 val maxX =
-                                                    (viewportWidthPx * (newScale - 1f)) / 2f
+                                                    (measuredWidthPx * (newScale - 1f)) / 2f
                                                 val maxY =
-                                                    (viewportHeightPx * (newScale - 1f)) / 2f
+                                                    (measuredHeightPx * (newScale - 1f)) / 2f
                                                 val newOffset = if (newScale > 1.01f) {
                                                     Offset(
                                                         x = (latestOffset.x + panChange.x)
@@ -519,23 +562,24 @@ fun PdfSignScreen(
                                         } while (event.changes.any { it.pressed })
                                     }
                                 }
-                                .pointerInput(viewportWidthPx, viewportHeightPx, selectedOverlayId) {
+                                // Pan con un dedo al hacer zoom; no interfiere si se mueve/redimensiona un sello.
+                                .pointerInput(measuredWidthPx, measuredHeightPx) {
                                     awaitEachGesture {
                                         awaitFirstDown(requireUnconsumed = false)
                                         do {
-                                            val event = awaitPointerEvent(PointerEventPass.Main)
+                                            val event = awaitPointerEvent(PointerEventPass.Final)
                                             val pressed = event.changes.filter { it.pressed }
                                             if (
                                                 pressed.size == 1 &&
                                                 latestScale > 1.01f &&
-                                                selectedOverlayId == null &&
+                                                !latestIsAdjustingOverlay &&
                                                 pressed.none { it.isConsumed }
                                             ) {
                                                 val panChange = event.calculatePan()
                                                 val maxX =
-                                                    (viewportWidthPx * (latestScale - 1f)) / 2f
+                                                    (measuredWidthPx * (latestScale - 1f)) / 2f
                                                 val maxY =
-                                                    (viewportHeightPx * (latestScale - 1f)) / 2f
+                                                    (measuredHeightPx * (latestScale - 1f)) / 2f
                                                 offset = Offset(
                                                     x = (latestOffset.x + panChange.x)
                                                         .coerceIn(-maxX, maxX),
@@ -572,9 +616,12 @@ fun PdfSignScreen(
                                     placementActive = pendingPlacement != null &&
                                         exportState == SignExportState.Editing,
                                     onSelectOverlay = { selectedOverlayId = it },
+                                    onClearSelection = { selectedOverlayId = null },
+                                    onAdjustingOverlayChange = { isAdjustingOverlay = it },
                                     onDeleteOverlay = { id ->
                                         overlays = overlays.filterNot { it.id == id }
                                         if (selectedOverlayId == id) selectedOverlayId = null
+                                        isAdjustingOverlay = false
                                     },
                                     onMoveOverlay = { id, dx, dy ->
                                         overlays = overlays.map { overlay ->
@@ -882,6 +929,8 @@ private fun SignPageItem(
     selectedOverlayId: String?,
     placementActive: Boolean,
     onSelectOverlay: (String) -> Unit,
+    onClearSelection: () -> Unit,
+    onAdjustingOverlayChange: (Boolean) -> Unit,
     onDeleteOverlay: (String) -> Unit,
     onMoveOverlay: (id: String, dxFrac: Float, dyFrac: Float) -> Unit,
     onResizeOverlay: (id: String, dWidthFrac: Float, dHeightFrac: Float) -> Unit,
@@ -889,6 +938,7 @@ private fun SignPageItem(
 ) {
     var pageBitmap by remember(pageIndex) { mutableStateOf<Bitmap?>(null) }
     val density = LocalDensity.current
+    val latestOnAdjustingOverlayChange by rememberUpdatedState(onAdjustingOverlayChange)
     val aspectRatio = remember(pageIndex, session) {
         runCatching { session.pageAspectRatio(pageIndex) }.getOrDefault(0.707f)
     }
@@ -911,20 +961,18 @@ private fun SignPageItem(
             modifier = Modifier
                 .fillMaxSize()
                 .clip(RoundedCornerShape(8.dp))
-                .then(
-                    if (placementActive) {
-                        Modifier.pointerInput(pageIndex) {
-                            detectTapGestures { offset ->
-                                onPlaceAt(
-                                    (offset.x / size.width).coerceIn(0f, 1f),
-                                    (offset.y / size.height).coerceIn(0f, 1f),
-                                )
-                            }
+                .pointerInput(pageIndex, placementActive) {
+                    detectTapGestures { tapOffset ->
+                        if (placementActive) {
+                            onPlaceAt(
+                                (tapOffset.x / size.width).coerceIn(0f, 1f),
+                                (tapOffset.y / size.height).coerceIn(0f, 1f),
+                            )
+                        } else {
+                            onClearSelection()
                         }
-                    } else {
-                        Modifier
-                    },
-                ),
+                    }
+                },
         ) {
             val pageWidthPx = constraints.maxWidth.toFloat().coerceAtLeast(1f)
             val pageHeightPx = constraints.maxHeight.toFloat().coerceAtLeast(1f)
@@ -982,20 +1030,20 @@ private fun SignPageItem(
                             color = if (selected) Primary else Color.Transparent,
                             shape = RoundedCornerShape(4.dp),
                         )
-                        .pointerInput(overlay.id, pageWidthPx, pageHeightPx) {
-                            detectTapGestures(onTap = { onSelectOverlay(overlay.id) })
-                        }
                         .pointerInput(overlay.id, pageWidthPx, pageHeightPx, viewScale) {
-                            detectDragGestures { change, dragAmount ->
-                                change.consume()
-                                onSelectOverlay(overlay.id)
-                                val scaleFactor = viewScale.coerceAtLeast(1f)
-                                onMoveOverlay(
-                                    overlay.id,
-                                    dragAmount.x / scaleFactor / pageWidthPx,
-                                    dragAmount.y / scaleFactor / pageHeightPx,
-                                )
-                            }
+                            // Claim the gesture on press so page-pan cannot steal resize/move.
+                            awaitOverlayDrag(
+                                onPress = { onSelectOverlay(overlay.id) },
+                                onAdjustingChange = latestOnAdjustingOverlayChange,
+                                onDrag = { dragAmount ->
+                                    val scaleFactor = viewScale.coerceAtLeast(1f)
+                                    onMoveOverlay(
+                                        overlay.id,
+                                        dragAmount.x / scaleFactor / pageWidthPx,
+                                        dragAmount.y / scaleFactor / pageHeightPx,
+                                    )
+                                },
+                            )
                         },
                 ) {
                     Image(
@@ -1025,19 +1073,21 @@ private fun SignPageItem(
                             modifier = Modifier
                                 .align(Alignment.CenterEnd)
                                 .offset(x = 10.dp)
-                                .size(width = 18.dp, height = 28.dp)
+                                .size(width = 22.dp, height = 32.dp)
                                 .background(Primary, RoundedCornerShape(999.dp))
                                 .border(2.dp, Color.White, RoundedCornerShape(999.dp))
                                 .pointerInput(overlay.id, pageWidthPx, viewScale) {
-                                    detectDragGestures { change, dragAmount ->
-                                        change.consume()
-                                        val scaleFactor = viewScale.coerceAtLeast(1f)
-                                        onResizeOverlay(
-                                            overlay.id,
-                                            dragAmount.x / scaleFactor / pageWidthPx,
-                                            0f,
-                                        )
-                                    }
+                                    awaitOverlayDrag(
+                                        onAdjustingChange = latestOnAdjustingOverlayChange,
+                                        onDrag = { dragAmount ->
+                                            val scaleFactor = viewScale.coerceAtLeast(1f)
+                                            onResizeOverlay(
+                                                overlay.id,
+                                                dragAmount.x / scaleFactor / pageWidthPx,
+                                                0f,
+                                            )
+                                        },
+                                    )
                                 },
                         )
                         // Height handle (bottom edge)
@@ -1045,19 +1095,21 @@ private fun SignPageItem(
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
                                 .offset(y = 10.dp)
-                                .size(width = 28.dp, height = 18.dp)
+                                .size(width = 32.dp, height = 22.dp)
                                 .background(Primary, RoundedCornerShape(999.dp))
                                 .border(2.dp, Color.White, RoundedCornerShape(999.dp))
                                 .pointerInput(overlay.id, pageHeightPx, viewScale) {
-                                    detectDragGestures { change, dragAmount ->
-                                        change.consume()
-                                        val scaleFactor = viewScale.coerceAtLeast(1f)
-                                        onResizeOverlay(
-                                            overlay.id,
-                                            0f,
-                                            dragAmount.y / scaleFactor / pageHeightPx,
-                                        )
-                                    }
+                                    awaitOverlayDrag(
+                                        onAdjustingChange = latestOnAdjustingOverlayChange,
+                                        onDrag = { dragAmount ->
+                                            val scaleFactor = viewScale.coerceAtLeast(1f)
+                                            onResizeOverlay(
+                                                overlay.id,
+                                                0f,
+                                                dragAmount.y / scaleFactor / pageHeightPx,
+                                            )
+                                        },
+                                    )
                                 },
                         )
                         // Free resize (corner)
@@ -1065,19 +1117,21 @@ private fun SignPageItem(
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
                                 .offset(x = 10.dp, y = 10.dp)
-                                .size(26.dp)
+                                .size(30.dp)
                                 .background(Primary, CircleShape)
                                 .border(2.dp, Color.White, CircleShape)
                                 .pointerInput(overlay.id, pageWidthPx, pageHeightPx, viewScale) {
-                                    detectDragGestures { change, dragAmount ->
-                                        change.consume()
-                                        val scaleFactor = viewScale.coerceAtLeast(1f)
-                                        onResizeOverlay(
-                                            overlay.id,
-                                            dragAmount.x / scaleFactor / pageWidthPx,
-                                            dragAmount.y / scaleFactor / pageHeightPx,
-                                        )
-                                    }
+                                    awaitOverlayDrag(
+                                        onAdjustingChange = latestOnAdjustingOverlayChange,
+                                        onDrag = { dragAmount ->
+                                            val scaleFactor = viewScale.coerceAtLeast(1f)
+                                            onResizeOverlay(
+                                                overlay.id,
+                                                dragAmount.x / scaleFactor / pageWidthPx,
+                                                dragAmount.y / scaleFactor / pageHeightPx,
+                                            )
+                                        },
+                                    )
                                 },
                             contentAlignment = Alignment.Center,
                         ) {
@@ -1090,6 +1144,41 @@ private fun SignPageItem(
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Blocks page pan immediately on press, then reports drag deltas until release.
+ */
+private suspend fun PointerInputScope.awaitOverlayDrag(
+    onPress: () -> Unit = {},
+    onAdjustingChange: (Boolean) -> Unit,
+    onDrag: (Offset) -> Unit,
+) {
+    awaitEachGesture {
+        val down = awaitFirstDown(requireUnconsumed = false)
+        down.consume()
+        onPress()
+        onAdjustingChange(true)
+        try {
+            while (true) {
+                val event = awaitPointerEvent(PointerEventPass.Main)
+                val change: PointerInputChange = event.changes.firstOrNull {
+                    it.id == down.id
+                } ?: break
+                if (change.changedToUp() || !change.pressed) {
+                    change.consume()
+                    break
+                }
+                val drag = change.positionChange()
+                change.consume()
+                if (drag.x != 0f || drag.y != 0f) {
+                    onDrag(drag)
+                }
+            }
+        } finally {
+            onAdjustingChange(false)
         }
     }
 }

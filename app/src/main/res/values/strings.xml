@@ -188,6 +188,8 @@
     <string name="reader_error_invalid_page">Ingresa un número entre 1 y %1$d</string>
     <string name="reader_loading">Cargando PDF…</string>
     <string name="reader_zoom_reset">Restablecer zoom</string>
+    <string name="reader_zoom_in">Acercar</string>
+    <string name="reader_zoom_out">Alejar</string>
     <string name="reader_convert_to_image">Convertir a imagen</string>
     <string name="reader_sign">Firmar PDF</string>
     <string name="reader_delete_pages">Eliminar páginas</string>
